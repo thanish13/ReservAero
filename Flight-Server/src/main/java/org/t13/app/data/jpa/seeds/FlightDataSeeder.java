@@ -1,13 +1,17 @@
 package org.t13.app.data.jpa.seeds;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
 import org.t13.app.data.mongo.documents.AircraftDocument;
 import org.t13.app.data.mongo.documents.AirportDocument;
 import org.t13.app.data.mongo.documents.FlightDocument;
 import org.t13.app.data.mongo.documents.SeatDocument;
+
 import static org.t13.app.seats.features.Mappings.toSeatDocument;
 import static org.t13.app.flights.features.Mappings.toFlightDocument;
 import static org.t13.app.aircrafts.features.Mappings.toAircraftDocument;
 import static org.t13.app.airports.features.Mappings.toAirportDocument;
+
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.springframework.boot.CommandLineRunner;
@@ -19,94 +23,94 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Component
 public class FlightDataSeeder implements CommandLineRunner {
 
-  private final EntityManager entityManager;
-  private final TransactionTemplate transactionTemplate;
-  private final MongoTemplate mongoTemplate;
-  private final Logger logger;
+    private final EntityManager entityManager;
+    private final TransactionTemplate transactionTemplate;
+    private final MongoTemplate mongoTemplate;
+    private final Logger logger;
 
-  public FlightDataSeeder(
-    EntityManager entityManager,
-    PlatformTransactionManager platformTransactionManager,
-    MongoTemplate mongoTemplate,
-    Logger logger) {
-    this.entityManager = entityManager;
-    this.transactionTemplate = new TransactionTemplate(platformTransactionManager);
+    public FlightDataSeeder(
+            @Qualifier("entityManager") EntityManager entityManager,
+            PlatformTransactionManager platformTransactionManager,
+            MongoTemplate mongoTemplate,
+            Logger logger) {
+        this.entityManager = entityManager;
+        this.transactionTemplate = new TransactionTemplate(platformTransactionManager);
 
-    this.mongoTemplate = mongoTemplate;
-    this.logger = logger;
-  }
-
-  @Override
-  public void run(String... args) throws Exception {
-    transactionTemplate.execute(status -> {
-      try {
-        logger.info("Data seeder is started.");
-
-        seedAirport();
-        seedAircraft();
-        seedFlight();
-        seedSeat();
-
-        logger.info("Data seeder is finished.");
-
-        return null;
-      }catch (Exception ex) {
-        status.setRollbackOnly();
-        logger.error(ex.getMessage(), ex);
-        throw ex;
-      }
-    });
-  }
-
-  private void seedAirport() {
-    if ((Long) entityManager.createQuery("SELECT COUNT(a) FROM AirportEntity a").getSingleResult() == 0) {
-      InitialData.airports.forEach(entityManager::persist);
-
-      if (mongoTemplate.getCollection("airports").countDocuments() == 0) {
-        InitialData.airports.forEach(airport -> {
-          AirportDocument airportDocument = toAirportDocument(airport);
-          mongoTemplate.insert(airportDocument);
-        });
-      }
+        this.mongoTemplate = mongoTemplate;
+        this.logger = logger;
     }
-  }
 
-  private void seedAircraft() {
-    if ((Long) entityManager.createQuery("SELECT COUNT(a) FROM AircraftEntity a").getSingleResult() == 0) {
-        InitialData.aircrafts.forEach(entityManager::persist);
+    @Override
+    public void run(String... args) throws Exception {
+        transactionTemplate.execute(status -> {
+            try {
+                logger.info("Data seeder is started.");
 
-      if (mongoTemplate.getCollection("aircrafts").countDocuments() == 0) {
-        InitialData.aircrafts.forEach(aircraft -> {
-          AircraftDocument aircraftDocument = toAircraftDocument(aircraft);
-          mongoTemplate.insert(aircraftDocument);
+                seedAirport();
+                seedAircraft();
+                seedFlight();
+                seedSeat();
+
+                logger.info("Data seeder is finished.");
+
+                return null;
+            } catch (Exception ex) {
+                status.setRollbackOnly();
+                logger.error(ex.getMessage(), ex);
+                throw ex;
+            }
         });
-      }
     }
-  }
 
-  private void seedFlight() {
-    if ((Long) entityManager.createQuery("SELECT COUNT(f) FROM FlightEntity f").getSingleResult() == 0) {
-      InitialData.flights.forEach(entityManager::persist);
+    private void seedAirport() {
+        if ((Long) entityManager.createQuery("SELECT COUNT(a) FROM AirportEntity a").getSingleResult() == 0) {
+            InitialData.airports.forEach(entityManager::persist);
 
-      if (mongoTemplate.getCollection("flights").countDocuments() == 0) {
-        InitialData.flights.forEach(flightEntity -> {
-          FlightDocument flightDocument = toFlightDocument(flightEntity);
-          mongoTemplate.insert(flightDocument);
-        });
-      }
+            if (mongoTemplate.getCollection("airports").countDocuments() == 0) {
+                InitialData.airports.forEach(airport -> {
+                    AirportDocument airportDocument = toAirportDocument(airport);
+                    mongoTemplate.insert(airportDocument);
+                });
+            }
+        }
     }
-  }
 
-  private void seedSeat() {
-    if ((Long) entityManager.createQuery("SELECT COUNT(s) FROM SeatEntity s").getSingleResult() == 0) {
-      InitialData.seats.forEach(entityManager::persist);
+    private void seedAircraft() {
+        if ((Long) entityManager.createQuery("SELECT COUNT(a) FROM AircraftEntity a").getSingleResult() == 0) {
+            InitialData.aircrafts.forEach(entityManager::persist);
 
-      if (mongoTemplate.getCollection("seats").countDocuments() == 0) {
-        InitialData.seats.forEach(seatEntity -> {
-          SeatDocument seatDocument = toSeatDocument(seatEntity);
-          mongoTemplate.insert(seatDocument);
-        });
-      }
+            if (mongoTemplate.getCollection("aircrafts").countDocuments() == 0) {
+                InitialData.aircrafts.forEach(aircraft -> {
+                    AircraftDocument aircraftDocument = toAircraftDocument(aircraft);
+                    mongoTemplate.insert(aircraftDocument);
+                });
+            }
+        }
     }
-  }
+
+    private void seedFlight() {
+        if ((Long) entityManager.createQuery("SELECT COUNT(f) FROM FlightEntity f").getSingleResult() == 0) {
+            InitialData.flights.forEach(entityManager::persist);
+
+            if (mongoTemplate.getCollection("flights").countDocuments() == 0) {
+                InitialData.flights.forEach(flightEntity -> {
+                    FlightDocument flightDocument = toFlightDocument(flightEntity);
+                    mongoTemplate.insert(flightDocument);
+                });
+            }
+        }
+    }
+
+    private void seedSeat() {
+        if ((Long) entityManager.createQuery("SELECT COUNT(s) FROM SeatEntity s").getSingleResult() == 0) {
+            InitialData.seats.forEach(entityManager::persist);
+
+            if (mongoTemplate.getCollection("seats").countDocuments() == 0) {
+                InitialData.seats.forEach(seatEntity -> {
+                    SeatDocument seatDocument = toSeatDocument(seatEntity);
+                    mongoTemplate.insert(seatDocument);
+                });
+            }
+        }
+    }
 }
